@@ -102,7 +102,7 @@ export default function PDFAutomatorPage() {
 
     try {
       // @ts-ignore - Accessing global library loaded via CDN
-      const { PDFDocument, rgb } = window.PDFLib;
+      const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
       
       const textColor = hexToRgb(config.color);
       const bgColor = hexToRgb(config.bgColor);
@@ -113,12 +113,17 @@ export default function PDFAutomatorPage() {
         if (!student.name || !student.roll) continue;
 
         const doc = await PDFDocument.load(pdfBytes);
+        
+        // Embed both the bold and regular fonts into the document
+        const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
+        const regularFont = await doc.embedFont(StandardFonts.Helvetica);
+        
         const pages = doc.getPages();
         const firstPage = pages[0];
         const pageHeight = firstPage.getHeight();
 
         // Helper function to handle Whiteout + Text writing with Top-Left conversion
-        const drawOverlay = (text: string, x: number, y: number, w: number, h: number) => {
+        const drawOverlay = (text: string, x: number, y: number, w: number, h: number, fontToUse: any) => {
           // If using Top-Left coordinates (from web tools), we need to invert the Y axis.
           // PDF-lib draws from the bottom-left. 
           const rectY = config.useTopLeft ? (pageHeight - y - h) : y;
@@ -140,13 +145,14 @@ export default function PDFAutomatorPage() {
             x: x + 4, // 4px slight padding from left edge
             y: textBaselineY,
             size: config.fontSize,
+            font: fontToUse, // Apply the dynamically selected font here
             color: pdfTextColor,
           });
         };
 
-        // Process Name and Roll No
-        drawOverlay(student.name, config.nameX, config.nameY, config.nameW, config.nameH);
-        drawOverlay(student.roll, config.rollX, config.rollY, config.rollW, config.rollH);
+        // Process Name (Bold) and Roll No (Regular)
+        drawOverlay(student.name, config.nameX, config.nameY, config.nameW, config.nameH, boldFont);
+        drawOverlay(student.roll, config.rollX, config.rollY, config.rollW, config.rollH, regularFont);
 
         const modifiedBytes = await doc.save();
         const blob = new Blob([modifiedBytes], { type: 'application/pdf' });
