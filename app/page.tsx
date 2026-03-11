@@ -187,7 +187,7 @@ export default function PDFAutomatorPage() {
               <div className="bg-indigo-600 p-2 rounded-xl text-white">
                 <FileText size={32} />
               </div>
-              PDF Batcher Pro
+              PDF Automator
             </h1>
             <p className="text-neutral-500 mt-2 text-lg font-medium">Automate & Edit college frontpages for your entire class.</p>
           </div>
